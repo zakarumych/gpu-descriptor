@@ -16,7 +16,7 @@ jobs:
         rust-toolchain: [stable, nightly]
     steps:
     - uses: actions/checkout@v2
-    - name: Install stable toolchain
+    - name: Install ${{ matrix.rust-toolchain }} toolchain
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
