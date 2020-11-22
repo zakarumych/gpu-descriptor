@@ -1,7 +1,7 @@
 # gpu-descriptor
 
 [![crates](https://img.shields.io/crates/v/gpu-descriptor.svg?style=for-the-badge&label=gpu-descriptor)](https://crates.io/crates/gpu-descriptor)
-[![docs](https://img.shields.io/badge/docs.rs-gpu-descriptor-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white)](https://docs.rs/gpu-descriptor)
+[![docs](https://img.shields.io/badge/docs.rs-gpu--descriptor-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white)](https://docs.rs/gpu-descriptor)
 [![actions](https://img.shields.io/github/workflow/status/zakarumych/gpu-descriptor/badge/master?style=for-the-badge)](https://github.com/zakarumych/gpu-descriptor/actions?query=workflow%3ARust)
 [![MIT/Apache](https://img.shields.io/badge/license-MIT%2FApache-blue.svg?style=for-the-badge)](COPYING)
 ![loc](https://img.shields.io/tokei/lines/github/zakarumych/gpu-descriptor?style=for-the-badge)
