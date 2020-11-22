@@ -1,0 +1,3 @@
+//!
+//! gpu-descriptor crate.
+//!
