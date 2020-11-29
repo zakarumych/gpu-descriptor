@@ -1,11 +1,4 @@
-[package]
-name = "gpu-descriptor"
-version = "0.1.0"
-edition = "2018"
-authors = ["zaq"]
-license = "MIT OR Apache-2.0"
-documentation = "https://docs.rs/gpu-descriptor/0.1.0"
-homepage = "https://github.com/zaq/gpu-descriptor"
-repository = "https://github.com/zaq/gpu-descriptor"
 
-[dependencies]
+[workspace]
+#members = ["types", "gpu-descriptor", "mock", "gfx", "erupt", "examples"]
+members = ["types", "gpu-descriptor"]
