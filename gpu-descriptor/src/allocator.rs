@@ -5,8 +5,8 @@ use {
         fmt::{self, Debug, Display},
     },
     gpu_descriptor_types::{
-        AllocationError, CreatePoolError, DescriptorDevice, DescriptorPoolCreateFlags,
-        DescriptorTotalCount,
+        CreatePoolError, DescriptorDevice, DescriptorPoolCreateFlags, DescriptorTotalCount,
+        DeviceAllocationError,
     },
     hashbrown::HashMap,
 };
@@ -48,8 +48,9 @@ impl<S> DescriptorSet<S> {
     }
 }
 
-/// Error that may occur during descriptor sets allocation.
-pub enum Error {
+/// AllocationError that may occur during descriptor sets allocation.
+#[derive(Debug)]
+pub enum AllocationError {
     /// Backend reported that device memory has been exhausted.\
     /// Deallocating device memory or other resources may increase chance
     /// that another allocation would succeed.
@@ -65,22 +66,25 @@ pub enum Error {
     Fragmentation,
 }
 
-impl Display for Error {
+impl Display for AllocationError {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::OutOfDeviceMemory => fmt.write_str("Device memory exhausted"),
-            Error::OutOfHostMemory => fmt.write_str("Host memory exhausted"),
-            Error::Fragmentation => fmt.write_str("Fragmentation"),
+            AllocationError::OutOfDeviceMemory => fmt.write_str("Device memory exhausted"),
+            AllocationError::OutOfHostMemory => fmt.write_str("Host memory exhausted"),
+            AllocationError::Fragmentation => fmt.write_str("Fragmentation"),
         }
     }
 }
 
-impl From<CreatePoolError> for Error {
+#[cfg(feature = "std")]
+impl std::error::Error for AllocationError {}
+
+impl From<CreatePoolError> for AllocationError {
     fn from(err: CreatePoolError) -> Self {
         match err {
-            CreatePoolError::OutOfDeviceMemory => Error::OutOfDeviceMemory,
-            CreatePoolError::OutOfHostMemory => Error::OutOfHostMemory,
-            CreatePoolError::Fragmentation => Error::Fragmentation,
+            CreatePoolError::OutOfDeviceMemory => AllocationError::OutOfDeviceMemory,
+            CreatePoolError::OutOfHostMemory => AllocationError::OutOfHostMemory,
+            CreatePoolError::Fragmentation => AllocationError::Fragmentation,
         }
     }
 }
@@ -181,7 +185,7 @@ impl<P> DescriptorBucket<P> {
         layout: &L,
         mut count: u32,
         allocated_sets: &mut Vec<DescriptorSet<S>>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), AllocationError> {
         debug_assert!(usize::try_from(count).is_ok(), "Must be ensured by caller");
 
         if count == 0 {
@@ -211,16 +215,20 @@ impl<P> DescriptorBucket<P> {
                 )
             } {
                 Ok(()) => {}
-                Err(AllocationError::OutOfDeviceMemory) => return Err(Error::OutOfDeviceMemory),
-                Err(AllocationError::OutOfHostMemory) => return Err(Error::OutOfHostMemory),
-                Err(AllocationError::FragmentedPool) => {
+                Err(DeviceAllocationError::OutOfDeviceMemory) => {
+                    return Err(AllocationError::OutOfDeviceMemory)
+                }
+                Err(DeviceAllocationError::OutOfHostMemory) => {
+                    return Err(AllocationError::OutOfHostMemory)
+                }
+                Err(DeviceAllocationError::FragmentedPool) => {
                     // Should not happen, but better this than panicing.
                     #[cfg(feature = "tracing")]
                     tracing::error!("Unexpectedly failed to allocated descriptor sets due to pool fragmentation");
                     pool.available = 0;
                     continue;
                 }
-                Err(AllocationError::OutOfPoolMemory) => {
+                Err(DeviceAllocationError::OutOfPoolMemory) => {
                     pool.available = 0;
                     continue;
                 }
@@ -279,14 +287,18 @@ impl<P> DescriptorBucket<P> {
                 Err(err) => {
                     unsafe { device.destroy_descriptor_pool(raw) }
                     match err {
-                        AllocationError::OutOfDeviceMemory => return Err(Error::OutOfDeviceMemory),
-                        AllocationError::OutOfHostMemory => return Err(Error::OutOfHostMemory),
-                        AllocationError::FragmentedPool => {
+                        DeviceAllocationError::OutOfDeviceMemory => {
+                            return Err(AllocationError::OutOfDeviceMemory)
+                        }
+                        DeviceAllocationError::OutOfHostMemory => {
+                            return Err(AllocationError::OutOfHostMemory)
+                        }
+                        DeviceAllocationError::FragmentedPool => {
                             // Should not happen, but better this than panicing.
                             #[cfg(feature = "trace")]
                             trace::error!("Unexpectedly failed to allocated descriptor sets due to pool fragmentation");
                         }
-                        AllocationError::OutOfPoolMemory => {}
+                        DeviceAllocationError::OutOfPoolMemory => {}
                     }
                     panic!("Failed to allocate descriptor sets from fresh pool");
                 }
@@ -413,7 +425,7 @@ impl<P, S> DescriptorAllocator<P, S> {
         flags: DescriptorSetLayoutCreateFlags,
         layout_descriptor_count: &DescriptorTotalCount,
         count: u32,
-    ) -> Result<Vec<DescriptorSet<S>>, Error>
+    ) -> Result<Vec<DescriptorSet<S>>, AllocationError>
     where
         S: Debug,
     {

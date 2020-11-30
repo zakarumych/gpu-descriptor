@@ -15,7 +15,7 @@ pub enum CreatePoolError {
 
 /// Memory exhausted error.
 #[derive(Debug)]
-pub enum AllocationError {
+pub enum DeviceAllocationError {
     /// Device memory exhausted.
     OutOfDeviceMemory,
 
@@ -45,7 +45,7 @@ pub trait DescriptorDevice<L, P, S> {
         pool: &mut P,
         layouts: impl Iterator<Item = &'a L>,
         sets: &mut impl Extend<S>,
-    ) -> Result<(), AllocationError>
+    ) -> Result<(), DeviceAllocationError>
     where
         L: 'a;
 

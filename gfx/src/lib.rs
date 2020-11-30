@@ -8,8 +8,8 @@ use {
         Backend,
     },
     gpu_descriptor_types::{
-        AllocationError, CreatePoolError, DescriptorDevice, DescriptorPoolCreateFlags,
-        DescriptorTotalCount,
+        CreatePoolError, DescriptorDevice, DescriptorPoolCreateFlags, DescriptorTotalCount,
+        DeviceAllocationError,
     },
     std::convert::TryFrom as _,
 };
@@ -202,17 +202,19 @@ where
         pool: &mut B::DescriptorPool,
         layouts: impl Iterator<Item = &'a B::DescriptorSetLayout>,
         sets: &mut impl Extend<B::DescriptorSet>,
-    ) -> Result<(), AllocationError> {
+    ) -> Result<(), DeviceAllocationError> {
         match pool.allocate(layouts, sets) {
             Ok(()) => Ok(()),
             Err(pso::AllocationError::OutOfMemory(OutOfMemory::Host)) => {
-                Err(AllocationError::OutOfHostMemory)
+                Err(DeviceAllocationError::OutOfHostMemory)
             }
             Err(pso::AllocationError::OutOfMemory(OutOfMemory::Device)) => {
-                Err(AllocationError::OutOfDeviceMemory)
+                Err(DeviceAllocationError::OutOfDeviceMemory)
             }
-            Err(pso::AllocationError::OutOfPoolMemory) => Err(AllocationError::OutOfPoolMemory),
-            Err(pso::AllocationError::FragmentedPool) => Err(AllocationError::FragmentedPool),
+            Err(pso::AllocationError::OutOfPoolMemory) => {
+                Err(DeviceAllocationError::OutOfPoolMemory)
+            }
+            Err(pso::AllocationError::FragmentedPool) => Err(DeviceAllocationError::FragmentedPool),
             Err(pso::AllocationError::IncompatibleLayout) => {
                 panic!("Unexpected error `IncompatibleLayout`")
             }
