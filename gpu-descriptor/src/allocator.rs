@@ -144,20 +144,20 @@ impl<P> DescriptorBucket<P> {
             .checked_next_power_of_two() // rounded up to nearest 2^N
             .unwrap_or(i32::MAX as u32);
 
-        max_sets = (u32::MAX / self.size.sampler).min(max_sets);
-        max_sets = (u32::MAX / self.size.combined_image_sampler).min(max_sets);
-        max_sets = (u32::MAX / self.size.sampled_image).min(max_sets);
-        max_sets = (u32::MAX / self.size.storage_image).min(max_sets);
-        max_sets = (u32::MAX / self.size.uniform_texel_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.size.storage_texel_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.size.uniform_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.size.storage_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.size.uniform_buffer_dynamic).min(max_sets);
-        max_sets = (u32::MAX / self.size.storage_buffer_dynamic).min(max_sets);
-        max_sets = (u32::MAX / self.size.input_attachment).min(max_sets);
-        max_sets = (u32::MAX / self.size.acceleration_structure).min(max_sets);
-        max_sets = (u32::MAX / self.size.inline_uniform_block_bytes).min(max_sets);
-        max_sets = (u32::MAX / self.size.inline_uniform_block_bindings).min(max_sets);
+        max_sets = (u32::MAX / self.size.sampler.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.combined_image_sampler.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.sampled_image.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_image.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.uniform_texel_buffer.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_texel_buffer.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.uniform_buffer.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_buffer.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.uniform_buffer_dynamic.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_buffer_dynamic.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.input_attachment.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.acceleration_structure.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.inline_uniform_block_bytes.max(1)).min(max_sets);
+        max_sets = (u32::MAX / self.size.inline_uniform_block_bindings.max(1)).min(max_sets);
 
         let size = DescriptorTotalCount {
             sampler: self.size.sampler * max_sets,
