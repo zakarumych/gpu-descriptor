@@ -2,16 +2,6 @@ use crate::types::{DescriptorPoolCreateFlags, DescriptorTotalCount};
 
 /// Memory exhausted error.
 #[derive(Debug)]
-pub enum OutOfMemory {
-    /// Device memory exhausted.
-    OutOfDeviceMemory,
-
-    /// Host memory exhausted.
-    OutOfHostMemory,
-}
-
-/// Memory exhausted error.
-#[derive(Debug)]
 pub enum CreatePoolError {
     /// Device memory exhausted.
     OutOfDeviceMemory,
