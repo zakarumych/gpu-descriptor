@@ -40,9 +40,7 @@ pub enum AllocationError {
 }
 
 /// Abstract device that can create pools of type `P` and allocate sets `S` with layout `L`.
-pub trait Device<L, P, S> {
-    type AllocatedSets: Iterator<Item = S>;
-
+pub trait DescriptorDevice<L, P, S> {
     unsafe fn create_descriptor_pool(
         &self,
         descriptor_count: &DescriptorTotalCount,
@@ -54,13 +52,12 @@ pub trait Device<L, P, S> {
 
     unsafe fn alloc_descriptor_sets<'a>(
         &self,
-        pool: &P,
+        pool: &mut P,
         layouts: impl Iterator<Item = &'a L>,
-    ) -> Result<Self::AllocatedSets, AllocationError>
+        sets: &mut impl Extend<S>,
+    ) -> Result<(), AllocationError>
     where
         L: 'a;
 
-    unsafe fn dealloc_descriptor_sets<'a>(&self, pool: &P, sets: impl Iterator<Item = S>);
+    unsafe fn dealloc_descriptor_sets<'a>(&self, pool: &mut P, sets: impl Iterator<Item = S>);
 }
-
-pub trait DescriptorPool<S> {}

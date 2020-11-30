@@ -1,8 +1,12 @@
 use {
     alloc::collections::VecDeque,
-    core::{convert::TryFrom as _, fmt::Debug},
+    core::{
+        convert::TryFrom as _,
+        fmt::{self, Debug, Display},
+    },
     gpu_descriptor_types::{
-        AllocationError, CreatePoolError, DescriptorPoolCreateFlags, DescriptorTotalCount, Device,
+        AllocationError, CreatePoolError, DescriptorDevice, DescriptorPoolCreateFlags,
+        DescriptorTotalCount,
     },
     hashbrown::HashMap,
 };
@@ -55,9 +59,20 @@ pub enum Error {
     /// Deallocating host memory may increase chance that another allocation would succeed.
     OutOfHostMemory,
 
-    /// The total number of descriptors across all pools created with flag `CREATE_UPDATE_AFTER_BIND_BIT` set exceeds maxUpdateAfterBindDescriptorsInAllPools
+    /// The total number of descriptors across all pools created\
+    /// with flag `CREATE_UPDATE_AFTER_BIND_BIT` set exceeds `max_update_after_bind_descriptors_in_all_pools`
     /// Or fragmentation of the underlying hardware resources occurs.
     Fragmentation,
+}
+
+impl Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::OutOfDeviceMemory => fmt.write_str("Device memory exhausted"),
+            Error::OutOfHostMemory => fmt.write_str("Host memory exhausted"),
+            Error::Fragmentation => fmt.write_str("Fragmentation"),
+        }
+    }
 }
 
 impl From<CreatePoolError> for Error {
@@ -72,11 +87,6 @@ impl From<CreatePoolError> for Error {
 
 const MIN_SETS: u32 = 64;
 const MAX_SETS: u32 = 512;
-
-#[derive(Debug)]
-struct Allocation<S> {
-    sets: Vec<(S, u64)>,
-}
 
 #[derive(Debug)]
 struct DescriptorPool<P> {
@@ -95,7 +105,7 @@ struct DescriptorBucket<P> {
     pools: VecDeque<DescriptorPool<P>>,
     total: u64,
     update_after_bind: bool,
-    descriptor_count: DescriptorTotalCount,
+    size: DescriptorTotalCount,
 }
 
 impl<P> Drop for DescriptorBucket<P> {
@@ -113,13 +123,13 @@ impl<P> Drop for DescriptorBucket<P> {
 }
 
 impl<P> DescriptorBucket<P> {
-    fn new(update_after_bind: bool, descriptor_count: DescriptorTotalCount) -> Self {
+    fn new(update_after_bind: bool, size: DescriptorTotalCount) -> Self {
         DescriptorBucket {
             offset: 0,
             pools: VecDeque::new(),
             total: 0,
             update_after_bind,
-            descriptor_count,
+            size,
         }
     }
 
@@ -130,37 +140,36 @@ impl<P> DescriptorBucket<P> {
             .checked_next_power_of_two() // rounded up to nearest 2^N
             .unwrap_or(i32::MAX as u32);
 
-        max_sets = (u32::MAX / self.descriptor_count.sampler).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.combined_image_sampler).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.sampled_image).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.storage_image).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.uniform_texel_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.storage_texel_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.uniform_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.storage_buffer).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.uniform_buffer_dynamic).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.storage_buffer_dynamic).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.input_attachment).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.acceleration_structure).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.inline_uniform_block_bytes).min(max_sets);
-        max_sets = (u32::MAX / self.descriptor_count.inline_uniform_block_bindings).min(max_sets);
+        max_sets = (u32::MAX / self.size.sampler).min(max_sets);
+        max_sets = (u32::MAX / self.size.combined_image_sampler).min(max_sets);
+        max_sets = (u32::MAX / self.size.sampled_image).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_image).min(max_sets);
+        max_sets = (u32::MAX / self.size.uniform_texel_buffer).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_texel_buffer).min(max_sets);
+        max_sets = (u32::MAX / self.size.uniform_buffer).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_buffer).min(max_sets);
+        max_sets = (u32::MAX / self.size.uniform_buffer_dynamic).min(max_sets);
+        max_sets = (u32::MAX / self.size.storage_buffer_dynamic).min(max_sets);
+        max_sets = (u32::MAX / self.size.input_attachment).min(max_sets);
+        max_sets = (u32::MAX / self.size.acceleration_structure).min(max_sets);
+        max_sets = (u32::MAX / self.size.inline_uniform_block_bytes).min(max_sets);
+        max_sets = (u32::MAX / self.size.inline_uniform_block_bindings).min(max_sets);
 
         let size = DescriptorTotalCount {
-            sampler: self.descriptor_count.sampler * max_sets,
-            combined_image_sampler: self.descriptor_count.combined_image_sampler * max_sets,
-            sampled_image: self.descriptor_count.sampled_image * max_sets,
-            storage_image: self.descriptor_count.storage_image * max_sets,
-            uniform_texel_buffer: self.descriptor_count.uniform_texel_buffer * max_sets,
-            storage_texel_buffer: self.descriptor_count.storage_texel_buffer * max_sets,
-            uniform_buffer: self.descriptor_count.uniform_buffer * max_sets,
-            storage_buffer: self.descriptor_count.storage_buffer * max_sets,
-            uniform_buffer_dynamic: self.descriptor_count.uniform_buffer_dynamic * max_sets,
-            storage_buffer_dynamic: self.descriptor_count.storage_buffer_dynamic * max_sets,
-            input_attachment: self.descriptor_count.input_attachment * max_sets,
-            acceleration_structure: self.descriptor_count.acceleration_structure * max_sets,
-            inline_uniform_block_bytes: self.descriptor_count.inline_uniform_block_bytes * max_sets,
-            inline_uniform_block_bindings: self.descriptor_count.inline_uniform_block_bindings
-                * max_sets,
+            sampler: self.size.sampler * max_sets,
+            combined_image_sampler: self.size.combined_image_sampler * max_sets,
+            sampled_image: self.size.sampled_image * max_sets,
+            storage_image: self.size.storage_image * max_sets,
+            uniform_texel_buffer: self.size.uniform_texel_buffer * max_sets,
+            storage_texel_buffer: self.size.storage_texel_buffer * max_sets,
+            uniform_buffer: self.size.uniform_buffer * max_sets,
+            storage_buffer: self.size.storage_buffer * max_sets,
+            uniform_buffer_dynamic: self.size.uniform_buffer_dynamic * max_sets,
+            storage_buffer_dynamic: self.size.storage_buffer_dynamic * max_sets,
+            input_attachment: self.size.input_attachment * max_sets,
+            acceleration_structure: self.size.acceleration_structure * max_sets,
+            inline_uniform_block_bytes: self.size.inline_uniform_block_bytes * max_sets,
+            inline_uniform_block_bindings: self.size.inline_uniform_block_bindings * max_sets,
         };
 
         (size, max_sets)
@@ -168,10 +177,10 @@ impl<P> DescriptorBucket<P> {
 
     fn allocate<L, S>(
         &mut self,
-        device: &impl Device<L, P, S>,
+        device: &impl DescriptorDevice<L, P, S>,
         layout: &L,
         mut count: u32,
-        allocation: &mut Allocation<S>,
+        allocated_sets: &mut Vec<DescriptorSet<S>>,
     ) -> Result<(), Error> {
         debug_assert!(usize::try_from(count).is_ok(), "Must be ensured by caller");
 
@@ -191,14 +200,17 @@ impl<P> DescriptorBucket<P> {
 
             match unsafe {
                 device.alloc_descriptor_sets(
-                    &pool.raw,
+                    &mut pool.raw,
                     core::iter::repeat(layout).take(allocate as usize),
+                    &mut Allocation {
+                        size: self.size,
+                        update_after_bind: self.update_after_bind,
+                        pool_id: index as u64 + self.offset,
+                        sets: allocated_sets,
+                    },
                 )
             } {
-                Ok(sets) => {
-                    let pool_index = index as u64 + self.offset;
-                    allocation.sets.extend(sets.map(|set| (set, pool_index)));
-                }
+                Ok(()) => {}
                 Err(AllocationError::OutOfDeviceMemory) => return Err(Error::OutOfDeviceMemory),
                 Err(AllocationError::OutOfHostMemory) => return Err(Error::OutOfHostMemory),
                 Err(AllocationError::FragmentedPool) => {
@@ -233,7 +245,7 @@ impl<P> DescriptorBucket<P> {
                 pool_size,
             );
 
-            let raw = unsafe {
+            let mut raw = unsafe {
                 device.create_descriptor_pool(
                     &pool_size,
                     max_sets,
@@ -246,18 +258,24 @@ impl<P> DescriptorBucket<P> {
                 )
             }?;
 
-            let pool_index = self.pools.len() as u64 + self.offset;
+            let pool_id = self.pools.len() as u64 + self.offset;
 
             let allocate = max_sets.min(count);
             let result = unsafe {
-                device
-                    .alloc_descriptor_sets(&raw, core::iter::repeat(layout).take(allocate as usize))
+                device.alloc_descriptor_sets(
+                    &mut raw,
+                    core::iter::repeat(layout).take(allocate as usize),
+                    &mut Allocation {
+                        pool_id,
+                        size: self.size,
+                        update_after_bind: self.update_after_bind,
+                        sets: allocated_sets,
+                    },
+                )
             };
 
             match result {
-                Ok(sets) => {
-                    allocation.sets.extend(sets.map(|set| (set, pool_index)));
-                }
+                Ok(()) => {}
                 Err(err) => {
                     unsafe { device.destroy_descriptor_pool(raw) }
                     match err {
@@ -288,8 +306,8 @@ impl<P> DescriptorBucket<P> {
 
     fn free<L, S>(
         &mut self,
-        device: &impl Device<L, P, S>,
-        sets: impl IntoIterator<Item = S>,
+        device: &impl DescriptorDevice<L, P, S>,
+        raw_sets: impl IntoIterator<Item = S>,
         pool_id: u64,
     ) {
         let pool = usize::try_from(pool_id - self.offset)
@@ -297,14 +315,15 @@ impl<P> DescriptorBucket<P> {
             .and_then(|index| self.pools.get_mut(index))
             .expect("Invalid pool id");
 
-        let mut sets = sets.into_iter();
+        let mut raw_sets = raw_sets.into_iter();
         let mut count = 0;
         unsafe {
-            device.dealloc_descriptor_sets(&pool.raw, sets.by_ref().inspect(|_| count += 1));
+            device
+                .dealloc_descriptor_sets(&mut pool.raw, raw_sets.by_ref().inspect(|_| count += 1));
         };
 
         debug_assert!(
-            sets.next().is_none(),
+            raw_sets.next().is_none(),
             "Device must deallocated all sets from iterator"
         );
 
@@ -328,7 +347,7 @@ impl<P> DescriptorBucket<P> {
         }
     }
 
-    fn cleanup<L, S>(&mut self, device: &impl Device<L, P, S>) {
+    fn cleanup<L, S>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
         while let Some(pool) = self.pools.pop_front() {
             if pool.allocated != 0 {
                 self.pools.push_front(pool);
@@ -350,8 +369,8 @@ impl<P> DescriptorBucket<P> {
 pub struct DescriptorAllocator<P, S> {
     buckets: HashMap<(DescriptorTotalCount, bool), DescriptorBucket<P>>,
     total: u64,
-    allocation_cache: Allocation<S>,
-    free_sets_cache: Vec<S>,
+    sets_cache: Vec<DescriptorSet<S>>,
+    raw_sets_cache: Vec<S>,
     max_update_after_bind_descriptors_in_all_pools: u32,
 }
 
@@ -375,8 +394,8 @@ impl<P, S> DescriptorAllocator<P, S> {
         DescriptorAllocator {
             buckets: HashMap::default(),
             total: 0,
-            allocation_cache: Allocation { sets: Vec::new() },
-            free_sets_cache: Vec::new(),
+            sets_cache: Vec::new(),
+            raw_sets_cache: Vec::new(),
             max_update_after_bind_descriptors_in_all_pools,
         }
     }
@@ -389,18 +408,17 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// [from bindings]: .
     pub fn allocate<L: Debug>(
         &mut self,
-        device: &impl Device<L, P, S>,
+        device: &impl DescriptorDevice<L, P, S>,
         layout: &L,
         flags: DescriptorSetLayoutCreateFlags,
         layout_descriptor_count: &DescriptorTotalCount,
         count: u32,
-        extend: &mut impl Extend<DescriptorSet<S>>,
-    ) -> Result<(), Error>
+    ) -> Result<Vec<DescriptorSet<S>>, Error>
     where
         S: Debug,
     {
         if count == 0 {
-            return Ok(());
+            return Ok(Vec::new());
         }
 
         let update_after_bind = flags.contains(DescriptorSetLayoutCreateFlags::UPDATE_AFTER_BIND);
@@ -417,37 +435,27 @@ impl<P, S> DescriptorAllocator<P, S> {
             .buckets
             .entry((layout_descriptor_count.clone(), update_after_bind))
             .or_insert_with(|| DescriptorBucket::new(update_after_bind, *layout_descriptor_count));
-        match bucket.allocate(device, layout, count, &mut self.allocation_cache) {
-            Ok(()) => {
-                extend.extend(self.allocation_cache.sets.drain(..).map(|(set, pool_id)| {
-                    DescriptorSet {
-                        raw: set,
-                        size: layout_descriptor_count.clone(),
-                        pool_id,
-                        update_after_bind,
-                    }
-                }));
-                Ok(())
-            }
+        match bucket.allocate(device, layout, count, &mut self.sets_cache) {
+            Ok(()) => Ok(core::mem::replace(&mut self.sets_cache, Vec::new())),
             Err(err) => {
-                debug_assert!(self.free_sets_cache.is_empty());
+                debug_assert!(self.raw_sets_cache.is_empty());
 
                 // Free sets allocated so far.
                 let mut last = None;
 
-                for (set, pool_id) in self.allocation_cache.sets.drain(..) {
-                    if Some(pool_id) != last {
+                for set in self.sets_cache.drain(..) {
+                    if Some(set.pool_id) != last {
                         if let Some(last_id) = last {
                             // Free contiguous range of sets from one pool in one go.
-                            bucket.free(device, self.free_sets_cache.drain(..), last_id);
+                            bucket.free(device, self.raw_sets_cache.drain(..), last_id);
                         }
                     }
-                    last = Some(pool_id);
-                    self.free_sets_cache.push(set);
+                    last = Some(set.pool_id);
+                    self.raw_sets_cache.push(set.raw);
                 }
 
                 if let Some(last_id) = last {
-                    bucket.free(device, self.free_sets_cache.drain(..), last_id);
+                    bucket.free(device, self.raw_sets_cache.drain(..), last_id);
                 }
 
                 Err(err)
@@ -464,10 +472,10 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// move to invalid state.
     pub unsafe fn free<L>(
         &mut self,
-        device: &impl Device<L, P, S>,
+        device: &impl DescriptorDevice<L, P, S>,
         sets: impl IntoIterator<Item = DescriptorSet<S>>,
     ) {
-        debug_assert!(self.free_sets_cache.is_empty());
+        debug_assert!(self.raw_sets_cache.is_empty());
 
         let mut last_key = (EMPTY_COUNT, false);
         let mut last_pool_id = None;
@@ -480,16 +488,16 @@ impl<P, S> DescriptorAllocator<P, S> {
                         .get_mut(&last_key)
                         .expect("Set must be allocated from this allocator");
 
-                    debug_assert!(u64::try_from(self.free_sets_cache.len())
+                    debug_assert!(u64::try_from(self.raw_sets_cache.len())
                         .ok()
                         .map_or(false, |count| count <= bucket.total));
 
-                    bucket.free(device, self.free_sets_cache.drain(..), pool_id);
+                    bucket.free(device, self.raw_sets_cache.drain(..), pool_id);
                 }
                 last_key = (set.size, set.update_after_bind);
                 last_pool_id = Some(set.pool_id);
             }
-            self.free_sets_cache.push(set.raw);
+            self.raw_sets_cache.push(set.raw);
         }
 
         if let Some(pool_id) = last_pool_id {
@@ -498,16 +506,16 @@ impl<P, S> DescriptorAllocator<P, S> {
                 .get_mut(&last_key)
                 .expect("Set must be allocated from this allocator");
 
-            debug_assert!(u64::try_from(self.free_sets_cache.len())
+            debug_assert!(u64::try_from(self.raw_sets_cache.len())
                 .ok()
                 .map_or(false, |count| count <= bucket.total));
 
-            bucket.free(device, self.free_sets_cache.drain(..), pool_id);
+            bucket.free(device, self.raw_sets_cache.drain(..), pool_id);
         }
     }
 
     /// Perform cleanup to allow resources reuse.
-    pub fn cleanup<L>(&mut self, device: &impl Device<L, P, S>) {
+    pub fn cleanup<L>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
         for bucket in self.buckets.values_mut() {
             bucket.cleanup(device)
         }
@@ -531,3 +539,24 @@ const EMPTY_COUNT: DescriptorTotalCount = DescriptorTotalCount {
     inline_uniform_block_bytes: 0,
     inline_uniform_block_bindings: 0,
 };
+
+struct Allocation<'a, S> {
+    update_after_bind: bool,
+    size: DescriptorTotalCount,
+    pool_id: u64,
+    sets: &'a mut Vec<DescriptorSet<S>>,
+}
+
+impl<S> Extend<S> for Allocation<'_, S> {
+    fn extend<T: IntoIterator<Item = S>>(&mut self, iter: T) {
+        let update_after_bind = self.update_after_bind;
+        let size = self.size;
+        let pool_id = self.pool_id;
+        self.sets.extend(iter.into_iter().map(|raw| DescriptorSet {
+            raw,
+            pool_id,
+            update_after_bind,
+            size,
+        }))
+    }
+}

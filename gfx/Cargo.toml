@@ -1,0 +1,16 @@
+[package]
+name = "gpu-descriptor-gfx"
+version = "0.1.0"
+authors = ["Zakarum <zakarumych@ya.ru>"]
+edition = "2018"
+description = "Implementation agnostic descriptor allocator for Vulkan like APIs"
+keywords = ["gpu", "vulkan", "no-std"]
+license = "MIT OR Apache-2.0"
+documentation = "https://docs.rs/gpu-descriptor-types/0.1.0"
+homepage = "https://github.com/zakarumych/gpu-descriptor"
+repository = "https://github.com/zakarumych/gpu-descriptor"
+
+[dependencies]
+gpu-descriptor-types = { path = "../types", version = "0.1" }
+tracing = { version = "0.1", optional = true, default-features = false }
+gfx-hal = "0.6"
