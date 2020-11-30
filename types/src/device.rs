@@ -54,13 +54,13 @@ pub trait Device<L, P, S> {
 
     unsafe fn alloc_descriptor_sets<'a>(
         &self,
-        pool: &P,
+        pool: &mut P,
         layouts: impl Iterator<Item = &'a L>,
     ) -> Result<Self::AllocatedSets, AllocationError>
     where
         L: 'a;
 
-    unsafe fn dealloc_descriptor_sets<'a>(&self, pool: &P, sets: impl Iterator<Item = S>);
+    unsafe fn dealloc_descriptor_sets<'a>(&self, pool: &mut P, sets: impl Iterator<Item = S>);
 }
 
 pub trait DescriptorPool<S> {}

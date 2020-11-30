@@ -185,7 +185,7 @@ impl<P> DescriptorBucket<P> {
 
             match unsafe {
                 device.alloc_descriptor_sets(
-                    &pool.raw,
+                    &mut pool.raw,
                     core::iter::repeat(layout).take(allocate as usize),
                 )
             } {
@@ -235,7 +235,7 @@ impl<P> DescriptorBucket<P> {
                 pool_size,
             );
 
-            let raw = unsafe {
+            let mut raw = unsafe {
                 device.create_descriptor_pool(
                     &pool_size,
                     max_sets,
@@ -252,8 +252,10 @@ impl<P> DescriptorBucket<P> {
 
             let allocate = max_sets.min(count);
             let result = unsafe {
-                device
-                    .alloc_descriptor_sets(&raw, core::iter::repeat(layout).take(allocate as usize))
+                device.alloc_descriptor_sets(
+                    &mut raw,
+                    core::iter::repeat(layout).take(allocate as usize),
+                )
             };
 
             match result {
@@ -307,7 +309,8 @@ impl<P> DescriptorBucket<P> {
         let mut raw_sets = raw_sets.into_iter();
         let mut count = 0;
         unsafe {
-            device.dealloc_descriptor_sets(&pool.raw, raw_sets.by_ref().inspect(|_| count += 1));
+            device
+                .dealloc_descriptor_sets(&mut pool.raw, raw_sets.by_ref().inspect(|_| count += 1));
         };
 
         debug_assert!(
