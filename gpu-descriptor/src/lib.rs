@@ -16,4 +16,4 @@ extern crate alloc;
 
 mod allocator;
 
-pub use crate::allocator::*;
+pub use {crate::allocator::*, gpu_descriptor_types::*};
