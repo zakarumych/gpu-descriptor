@@ -12,8 +12,6 @@
     unused_qualifications
 )]
 
-extern crate alloc;
-
 mod allocator;
 
 pub use crate::allocator::*;
