@@ -1,5 +1,5 @@
 use {
-    alloc::collections::VecDeque,
+    alloc::{collections::VecDeque, vec::Vec},
     core::{
         convert::TryFrom as _,
         fmt::{self, Debug, Display},
