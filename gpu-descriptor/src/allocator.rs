@@ -13,13 +13,13 @@ use {
 
 bitflags::bitflags! {
     /// Flags to augment descriptor set allocation.
-    pub struct DescriptorSetLayoutCreateFlags: u8 {
+    pub struct DescriptorSetLayoutCreateFlags: u32 {
         /// Specified that descriptor set must be allocated from\
         /// pool with `DescriptorPoolCreateFlags::UPDATE_AFTER_BIND`.
         ///
         /// This flag must be specified when and only when layout was created with matching backend-specific flag,
         /// that allows layout to have UpdateAfterBind bindings.
-        const UPDATE_AFTER_BIND = 0x1;
+        const UPDATE_AFTER_BIND = 0x2;
     }
 }
 
