@@ -530,6 +530,7 @@ impl<P, S> DescriptorAllocator<P, S> {
         for bucket in self.buckets.values_mut() {
             bucket.cleanup(device)
         }
+        self.buckets.retain(|_, bucket| !bucket.pools.is_empty());
     }
 }
 
