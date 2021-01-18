@@ -200,7 +200,7 @@ where
     unsafe fn alloc_descriptor_sets<'a>(
         &self,
         pool: &mut B::DescriptorPool,
-        layouts: impl Iterator<Item = &'a B::DescriptorSetLayout>,
+        layouts: impl ExactSizeIterator<Item = &'a B::DescriptorSetLayout>,
         sets: &mut impl Extend<B::DescriptorSet>,
     ) -> Result<(), DeviceAllocationError> {
         match pool.allocate(layouts, sets) {
