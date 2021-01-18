@@ -204,7 +204,7 @@ impl<P> DescriptorBucket<P> {
 
             let result = device.alloc_descriptor_sets(
                 &mut pool.raw,
-                core::iter::repeat(layout).take(allocate as usize),
+                (0..allocate).map(|_| layout),
                 &mut Allocation {
                     size: self.size,
                     update_after_bind: self.update_after_bind,
@@ -269,7 +269,7 @@ impl<P> DescriptorBucket<P> {
             let allocate = max_sets.min(count);
             let result = device.alloc_descriptor_sets(
                 &mut raw,
-                core::iter::repeat(layout).take(allocate as usize),
+                (0..allocate).map(|_| layout),
                 &mut Allocation {
                     pool_id,
                     size: self.size,
