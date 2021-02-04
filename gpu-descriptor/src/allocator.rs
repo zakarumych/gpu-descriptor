@@ -114,6 +114,7 @@ struct DescriptorBucket<P> {
 
 impl<P> Drop for DescriptorBucket<P> {
     fn drop(&mut self) {
+        #[cfg(feature = "std")]
         if !std::thread::panicking() {
             assert_eq!(
                 self.total, 0,
