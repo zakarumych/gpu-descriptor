@@ -381,7 +381,7 @@ pub struct DescriptorAllocator<P, S> {
 
 impl<P, S> Drop for DescriptorAllocator<P, S> {
     fn drop(&mut self) {
-        if !self.buckets.is_empty() {
+        if self.buckets.drain().any(|(_, bucket)| bucket.total != 0) {
             #[cfg(feature = "tracing")]
             tracing::error!(
                 "`DescriptorAllocator` is dropped while some descriptor sets were not deallocated"
