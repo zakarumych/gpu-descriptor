@@ -114,15 +114,17 @@ struct DescriptorBucket<P> {
 
 impl<P> Drop for DescriptorBucket<P> {
     fn drop(&mut self) {
-        assert_eq!(
-            self.total, 0,
-            "Allocator dropped before all sets were deallocated"
-        );
+        if !std::thread::panicking() {
+            assert_eq!(
+                self.total, 0,
+                "Allocator dropped before all sets were deallocated"
+            );
 
-        assert!(
-            self.pools.is_empty(),
-            "All sets deallocated but pools were not. Make sure to call `Allocator::cleanup`"
-        );
+            assert!(
+                self.pools.is_empty(),
+                "All sets deallocated but pools were not. Make sure to call `Allocator::cleanup`"
+            );
+        }
     }
 }
 
