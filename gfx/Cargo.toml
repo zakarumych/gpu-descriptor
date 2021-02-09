@@ -13,4 +13,4 @@ repository = "https://github.com/zakarumych/gpu-descriptor"
 [dependencies]
 gpu-descriptor-types = { path = "../types", version = "0.1" }
 tracing = { version = "0.1", optional = true, default-features = false }
-gfx-hal = "0.6"
+gfx-hal = "0.7"
