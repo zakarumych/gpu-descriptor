@@ -182,9 +182,9 @@ where
             gfx_flags |= pso::DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET;
         }
 
-        let result = self
-            .device
-            .create_descriptor_pool(max_sets, &array[..len], gfx_flags);
+        let result =
+            self.device
+                .create_descriptor_pool(max_sets, array[..len].iter().cloned(), gfx_flags);
 
         match result {
             Ok(pool) => Ok(pool),
