@@ -113,18 +113,33 @@ struct DescriptorBucket<P> {
 }
 
 impl<P> Drop for DescriptorBucket<P> {
+    #[cfg(feature = "tracing")]
     fn drop(&mut self) {
         #[cfg(feature = "std")]
-        if !std::thread::panicking() {
-            assert_eq!(
-                self.total, 0,
-                "Allocator dropped before all sets were deallocated"
-            );
+        {
+            if std::thread::panicking() {
+                return;
+            }
+        }
+        if self.total > 0 {
+            tracing::error!("Descriptor sets were not deallocated");
+        }
+    }
 
-            assert!(
-                self.pools.is_empty(),
-                "All sets deallocated but pools were not. Make sure to call `Allocator::cleanup`"
-            );
+    #[cfg(all(not(feature = "tracing"), feature = "std"))]
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            return;
+        }
+        if self.total > 0 {
+            eprintln!("Descriptor sets were not deallocated")
+        }
+    }
+
+    #[cfg(all(not(feature = "tracing"), not(feature = "std")))]
+    fn drop(&mut self) {
+        if self.total > 0 {
+            panic!("Descriptor sets were not deallocated")
         }
     }
 }
