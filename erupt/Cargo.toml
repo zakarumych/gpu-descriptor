@@ -1,0 +1,17 @@
+[package]
+name = "gpu-descriptor-erupt"
+version = "0.2.0"
+authors = ["Zakarum <zakarumych@ya.ru>"]
+edition = "2018"
+description = "gpu-descriptor integration with erupt"
+keywords = ["gpu", "vulkan", "no-std"]
+license = "MIT OR Apache-2.0"
+documentation = "https://docs.rs/gpu-descriptor-erupt"
+homepage = "https://github.com/zakarumych/gpu-descriptor"
+repository = "https://github.com/zakarumych/gpu-descriptor"
+
+[dependencies]
+gpu-descriptor-types = { path = "../types", version = "0.1" }
+tracing = { version = "0.1", optional = true, default-features = false }
+erupt = "0.18.0"
+smallvec = "1.0"

@@ -1,4 +1,3 @@
 
 [workspace]
-#members = ["types", "gpu-descriptor", "mock", "gfx", "erupt", "examples"]
-members = ["types", "gpu-descriptor", "gfx"]
+members = ["types", "gpu-descriptor", "gfx", "erupt"]
