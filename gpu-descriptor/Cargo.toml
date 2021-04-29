@@ -6,7 +6,7 @@ edition = "2018"
 description = "Implementation agnostic descriptor allocator for Vulkan like APIs"
 keywords = ["gpu", "vulkan", "no-std"]
 license = "MIT OR Apache-2.0"
-documentation = "https://docs.rs/gpu-descriptor-types/0.1.0"
+documentation = "https://docs.rs/gpu-descriptor"
 homepage = "https://github.com/zakarumych/gpu-descriptor"
 repository = "https://github.com/zakarumych/gpu-descriptor"
 

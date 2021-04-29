@@ -3,10 +3,10 @@ name = "gpu-descriptor-gfx"
 version = "0.2.0"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 edition = "2018"
-description = "Implementation agnostic descriptor allocator for Vulkan like APIs"
+description = "gpu-descriptor integration with gfx-hal"
 keywords = ["gpu", "vulkan", "no-std"]
 license = "MIT OR Apache-2.0"
-documentation = "https://docs.rs/gpu-descriptor-types/0.1.0"
+documentation = "https://docs.rs/gpu-descriptor-gfx"
 homepage = "https://github.com/zakarumych/gpu-descriptor"
 repository = "https://github.com/zakarumych/gpu-descriptor"
 
