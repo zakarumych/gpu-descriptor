@@ -413,9 +413,9 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// one `DescriptorAllocator` instance.
     /// * `flags` must match flags that were used to create the layout.
     /// * `layout_descriptor_count` must match descriptor numbers in the layout.
-    pub unsafe fn allocate<L: Debug>(
+    pub unsafe fn allocate<L, D>(
         &mut self,
-        device: &impl DescriptorDevice<L, P, S>,
+        device: &D,
         layout: &L,
         flags: DescriptorSetLayoutCreateFlags,
         layout_descriptor_count: &DescriptorTotalCount,
@@ -423,6 +423,8 @@ impl<P, S> DescriptorAllocator<P, S> {
     ) -> Result<Vec<DescriptorSet<S>>, AllocationError>
     where
         S: Debug,
+        L: Debug,
+        D: DescriptorDevice<L, P, S>,
     {
         if count == 0 {
             return Ok(Vec::new());
@@ -479,11 +481,11 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// * None of descriptor sets can be referenced in any pending command buffers.
     /// * All command buffers where at least one of descriptor sets referenced
     /// move to invalid state.
-    pub unsafe fn free<L>(
-        &mut self,
-        device: &impl DescriptorDevice<L, P, S>,
-        sets: impl IntoIterator<Item = DescriptorSet<S>>,
-    ) {
+    pub unsafe fn free<L, D, I>(&mut self, device: &D, sets: I)
+    where
+        D: DescriptorDevice<L, P, S>,
+        I: IntoIterator<Item = DescriptorSet<S>>,
+    {
         debug_assert!(self.raw_sets_cache.is_empty());
 
         let mut last_key = (EMPTY_COUNT, false);
