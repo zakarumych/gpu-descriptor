@@ -7,7 +7,23 @@
 ![loc](https://img.shields.io/tokei/lines/github/zakarumych/gpu-descriptor?style=for-the-badge)
 
 
-gpu-descriptor crate.
+Library for Vulkan-like APIs to allocated descriptor sets
+from descriptor pools fast, with least overhead and zero fragmentation.
+
+Straightforward usage:
+```rust
+use gpu_descriptor::DescriptorAllocator;
+
+let mut allocator = DescriptorAllocator::new(max_update_after_bind_descriptors_in_all_pools); // Limit as dictated by API for selected hardware
+
+let result = allocator.allocate(
+    device, // Implementation of `gpu_descriptor::DescriptorDevice`. Comes from plugins.
+    layout, // Descriptor set layout recognized by device's type.
+    flags,  // Flags specified when layout was created.
+    layout_descriptor_count, // Descriptors count in the layout.
+    count, // count of sets to allocated.
+);
+```
 
 
 ## License
