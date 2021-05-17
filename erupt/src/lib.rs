@@ -100,7 +100,9 @@ impl DescriptorDevice<vk1_0::DescriptorSetLayout, vk1_0::DescriptorPool, vk1_0::
         }
 
         if descriptor_count.acceleration_structure != 0 {
-            panic!("Acceleration structures are not supported");
+            array[len]._type = vk1_0::DescriptorType::ACCELERATION_STRUCTURE_KHR;
+            array[len].descriptor_count = descriptor_count.acceleration_structure;
+            len += 1;
         }
 
         if descriptor_count.inline_uniform_block_bytes != 0 {
