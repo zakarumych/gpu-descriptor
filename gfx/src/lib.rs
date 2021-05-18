@@ -164,12 +164,6 @@ where
             len += 1;
         }
 
-        if len == 0 {
-            array[0].ty = DescriptorType::Sampler;
-            array[0].count = 1;
-            len = 1;
-        }
-
         if descriptor_count.acceleration_structure != 0 {
             panic!("Acceleration structures are not supported");
         }

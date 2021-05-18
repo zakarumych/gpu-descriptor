@@ -177,7 +177,7 @@ impl<P> DescriptorBucket<P> {
         max_sets = (u32::MAX / self.size.inline_uniform_block_bytes.max(1)).min(max_sets);
         max_sets = (u32::MAX / self.size.inline_uniform_block_bindings.max(1)).min(max_sets);
 
-        let size = DescriptorTotalCount {
+        let mut pool_size = DescriptorTotalCount {
             sampler: self.size.sampler * max_sets,
             combined_image_sampler: self.size.combined_image_sampler * max_sets,
             sampled_image: self.size.sampled_image * max_sets,
@@ -194,7 +194,11 @@ impl<P> DescriptorBucket<P> {
             inline_uniform_block_bindings: self.size.inline_uniform_block_bindings * max_sets,
         };
 
-        (size, max_sets)
+        if pool_size == Default::default() {
+            pool_size.sampler = 1;
+        }
+
+        (pool_size, max_sets)
     }
 
     unsafe fn allocate<L, S>(

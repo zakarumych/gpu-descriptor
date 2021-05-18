@@ -105,12 +105,6 @@ impl DescriptorDevice<vk1_0::DescriptorSetLayout, vk1_0::DescriptorPool, vk1_0::
             len += 1;
         }
 
-        if len == 0 {
-            array[len]._type = vk1_0::DescriptorType::SAMPLER;
-            array[0].descriptor_count = 1;
-            len = 1;
-        }
-
         if descriptor_count.inline_uniform_block_bytes != 0 {
             panic!("Inline uniform blocks are not supported");
         }
