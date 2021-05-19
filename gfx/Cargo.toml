@@ -9,6 +9,7 @@ license = "MIT OR Apache-2.0"
 documentation = "https://docs.rs/gpu-descriptor-gfx"
 homepage = "https://github.com/zakarumych/gpu-descriptor"
 repository = "https://github.com/zakarumych/gpu-descriptor"
+readme = "../README.md"
 
 [dependencies]
 gpu-descriptor-types = { path = "../types", version = "0.1" }
