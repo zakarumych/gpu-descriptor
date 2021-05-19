@@ -1,6 +1,6 @@
 [package]
 name = "gpu-descriptor-erupt"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 edition = "2018"
 description = "gpu-descriptor integration with erupt"
