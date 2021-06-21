@@ -132,7 +132,6 @@ impl DescriptorDevice<vk1_0::DescriptorSetLayout, vk1_0::DescriptorPool, vk1_0::
                     .flags(erupt_flags)
                     .build(),
                 None,
-                None,
             )
             .result();
 
