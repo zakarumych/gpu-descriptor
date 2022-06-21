@@ -129,8 +129,7 @@ impl DescriptorDevice<vk1_0::DescriptorSetLayout, vk1_0::DescriptorPool, vk1_0::
                 &vk1_0::DescriptorPoolCreateInfoBuilder::default()
                     .max_sets(max_sets)
                     .pool_sizes(&array[..len])
-                    .flags(erupt_flags)
-                    .build(),
+                    .flags(erupt_flags),
                 None,
             )
             .result();
@@ -147,7 +146,7 @@ impl DescriptorDevice<vk1_0::DescriptorSetLayout, vk1_0::DescriptorPool, vk1_0::
     }
 
     unsafe fn destroy_descriptor_pool(&self, pool: vk1_0::DescriptorPool) {
-        self.device.destroy_descriptor_pool(Some(pool), None)
+        self.device.destroy_descriptor_pool(pool, None)
     }
 
     unsafe fn alloc_descriptor_sets<'a>(
