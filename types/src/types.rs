@@ -3,7 +3,7 @@ bitflags::bitflags! {
     ///
     /// Match corresponding bits in Vulkan.
     pub struct DescriptorPoolCreateFlags: u32 {
-        /// Allows freeing individial sets.
+        /// Allows freeing individual sets.
         const FREE_DESCRIPTOR_SET = 0x1;
 
         /// Allows allocating sets with layout created with matching backend-specific flag.

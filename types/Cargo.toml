@@ -6,7 +6,7 @@ edition = "2018"
 description = "Core types of gpu-descriptor crate"
 keywords = ["gpu", "vulkan", "allocation", "no-std"]
 license = "MIT OR Apache-2.0"
-documentation = "https://docs.rs/gpu-descriptor-types/0.1.0"
+documentation = "https://docs.rs/gpu-descriptor-types"
 homepage = "https://github.com/zakarumych/gpu-descriptor"
 repository = "https://github.com/zakarumych/gpu-descriptor"
 
