@@ -2,6 +2,7 @@ bitflags::bitflags! {
     /// Flags to augment descriptor pool creation.
     ///
     /// Match corresponding bits in Vulkan.
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct DescriptorPoolCreateFlags: u32 {
         /// Allows freeing individual sets.
         const FREE_DESCRIPTOR_SET = 0x1;

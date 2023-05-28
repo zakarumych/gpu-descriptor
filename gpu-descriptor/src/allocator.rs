@@ -13,6 +13,7 @@ use {
 
 bitflags::bitflags! {
     /// Flags to augment descriptor set allocation.
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct DescriptorSetLayoutCreateFlags: u32 {
         /// Specified that descriptor set must be allocated from\
         /// pool with `DescriptorPoolCreateFlags::UPDATE_AFTER_BIND`.
