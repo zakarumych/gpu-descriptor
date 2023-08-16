@@ -464,7 +464,7 @@ impl<P, S> DescriptorAllocator<P, S> {
             .entry((*layout_descriptor_count, update_after_bind))
             .or_insert_with(|| DescriptorBucket::new(update_after_bind, *layout_descriptor_count));
         match bucket.allocate(device, layout, count, &mut self.sets_cache) {
-            Ok(()) => Ok(core::mem::replace(&mut self.sets_cache, Vec::new())),
+            Ok(()) => Ok(std::mem::take(&mut self.sets_cache)),
             Err(err) => {
                 debug_assert!(self.raw_sets_cache.is_empty());
 
