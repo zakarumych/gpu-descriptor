@@ -49,5 +49,5 @@ pub trait DescriptorDevice<L, P, S> {
     where
         L: 'a;
 
-    unsafe fn dealloc_descriptor_sets<'a>(&self, pool: &mut P, sets: impl Iterator<Item = S>);
+    unsafe fn dealloc_descriptor_sets(&self, pool: &mut P, sets: impl Iterator<Item = S>);
 }
