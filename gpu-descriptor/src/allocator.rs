@@ -395,7 +395,6 @@ impl<P> DescriptorBucket<P> {
 #[derive(Debug)]
 pub struct DescriptorAllocator<P, S> {
     buckets: HashMap<(DescriptorTotalCount, bool), DescriptorBucket<P>>,
-    total: u64,
     sets_cache: Vec<DescriptorSet<S>>,
     raw_sets_cache: Vec<S>,
     max_update_after_bind_descriptors_in_all_pools: u32,
@@ -417,7 +416,6 @@ impl<P, S> DescriptorAllocator<P, S> {
     pub fn new(max_update_after_bind_descriptors_in_all_pools: u32) -> Self {
         DescriptorAllocator {
             buckets: HashMap::default(),
-            total: 0,
             sets_cache: Vec::new(),
             raw_sets_cache: Vec::new(),
             max_update_after_bind_descriptors_in_all_pools,
