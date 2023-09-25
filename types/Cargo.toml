@@ -11,4 +11,4 @@ homepage = "https://github.com/zakarumych/gpu-descriptor"
 repository = "https://github.com/zakarumych/gpu-descriptor"
 
 [dependencies]
-bitflags = { version = "1.2", default-features = false }
+bitflags = { version = "2.3", default-features = false }
