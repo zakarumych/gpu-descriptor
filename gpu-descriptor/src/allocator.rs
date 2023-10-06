@@ -396,7 +396,6 @@ impl<P> DescriptorBucket<P> {
 #[derive(Debug)]
 pub struct DescriptorAllocator<P, S> {
     buckets: HashMap<(DescriptorTotalCount, bool), DescriptorBucket<P>>,
-    total: u64,
     sets_cache: Vec<DescriptorSet<S>>,
     raw_sets_cache: Vec<S>,
     max_update_after_bind_descriptors_in_all_pools: u32,
@@ -418,7 +417,6 @@ impl<P, S> DescriptorAllocator<P, S> {
     pub fn new(max_update_after_bind_descriptors_in_all_pools: u32) -> Self {
         DescriptorAllocator {
             buckets: HashMap::default(),
-            total: 0,
             sets_cache: Vec::new(),
             raw_sets_cache: Vec::new(),
             max_update_after_bind_descriptors_in_all_pools,
@@ -465,7 +463,7 @@ impl<P, S> DescriptorAllocator<P, S> {
             .entry((*layout_descriptor_count, update_after_bind))
             .or_insert_with(|| DescriptorBucket::new(update_after_bind, *layout_descriptor_count));
         match bucket.allocate(device, layout, count, &mut self.sets_cache) {
-            Ok(()) => Ok(core::mem::replace(&mut self.sets_cache, Vec::new())),
+            Ok(()) => Ok(std::mem::take(&mut self.sets_cache)),
             Err(err) => {
                 debug_assert!(self.raw_sets_cache.is_empty());
 
