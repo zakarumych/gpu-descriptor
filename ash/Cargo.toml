@@ -1,6 +1,6 @@
 [package]
 name = "gpu-descriptor-ash"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 edition = "2018"
 description = "gpu-descriptor integration with ash"
@@ -14,5 +14,5 @@ readme = "../README.md"
 [dependencies]
 gpu-descriptor-types = { path = "../types", version = "0.1" }
 tracing = { version = "0.1", optional = true, default-features = false }
-ash = { version = "0.37", default-features = false }
+ash = { version = "0.38", default-features = false }
 smallvec = "1.0"

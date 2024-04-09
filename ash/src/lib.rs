@@ -30,7 +30,7 @@ impl DescriptorDevice<vk::DescriptorSetLayout, vk::DescriptorPool, vk::Descripto
         max_sets: u32,
         flags: DescriptorPoolCreateFlags,
     ) -> Result<vk::DescriptorPool, CreatePoolError> {
-        let mut array = [vk::DescriptorPoolSize::builder().build(); 13];
+        let mut array = [vk::DescriptorPoolSize::default(); 13];
         let mut len = 0;
 
         if descriptor_count.sampler != 0 {
@@ -124,7 +124,7 @@ impl DescriptorDevice<vk::DescriptorSetLayout, vk::DescriptorPool, vk::Descripto
         }
 
         let result = self.device.create_descriptor_pool(
-            &vk::DescriptorPoolCreateInfo::builder()
+            &vk::DescriptorPoolCreateInfo::default()
                 .max_sets(max_sets)
                 .pool_sizes(&array[..len])
                 .flags(ash_flags),
@@ -153,7 +153,7 @@ impl DescriptorDevice<vk::DescriptorSetLayout, vk::DescriptorPool, vk::Descripto
         let set_layouts: smallvec::SmallVec<[_; 16]> = layouts.copied().collect();
 
         match self.device.allocate_descriptor_sets(
-            &vk::DescriptorSetAllocateInfo::builder()
+            &vk::DescriptorSetAllocateInfo::default()
                 .set_layouts(&set_layouts)
                 .descriptor_pool(*pool),
         ) {
