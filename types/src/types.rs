@@ -32,3 +32,22 @@ pub struct DescriptorTotalCount {
     pub inline_uniform_block_bytes: u32,
     pub inline_uniform_block_bindings: u32,
 }
+
+impl DescriptorTotalCount {
+    pub fn total(&self) -> u32 {
+        self.sampler
+            + self.combined_image_sampler
+            + self.sampled_image
+            + self.storage_image
+            + self.uniform_texel_buffer
+            + self.storage_texel_buffer
+            + self.uniform_buffer
+            + self.storage_buffer
+            + self.uniform_buffer_dynamic
+            + self.storage_buffer_dynamic
+            + self.input_attachment
+            + self.acceleration_structure
+            + self.inline_uniform_block_bytes
+            + self.inline_uniform_block_bindings
+    }
+}
