@@ -314,8 +314,8 @@ impl<P> DescriptorBucket<P> {
                         }
                         DeviceAllocationError::FragmentedPool => {
                             // Should not happen, but better this than panicing.
-                            #[cfg(feature = "trace")]
-                            trace::error!("Unexpectedly failed to allocated descriptor sets due to pool fragmentation");
+                            #[cfg(feature = "tracing")]
+                            tracing::error!("Unexpectedly failed to allocated descriptor sets due to pool fragmentation");
                         }
                         DeviceAllocationError::OutOfPoolMemory => {}
                     }
