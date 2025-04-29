@@ -432,7 +432,7 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// # Safety
     ///
     /// * Same `device` instance must be passed to all method calls of
-    /// one `DescriptorAllocator` instance.
+    ///   one `DescriptorAllocator` instance.
     /// * `flags` must match flags that were used to create the layout.
     /// * `layout_descriptor_count` must match descriptor numbers in the layout.
     pub unsafe fn allocate<L, D>(
@@ -519,7 +519,7 @@ impl<P, S> DescriptorAllocator<P, S> {
     ///   one `DescriptorAllocator` instance.
     /// * None of descriptor sets can be referenced in any pending command buffers.
     /// * All command buffers where at least one of descriptor sets referenced
-    /// move to invalid state.
+    ///   move to invalid state.
     pub unsafe fn free<L, D, I>(&mut self, device: &D, sets: I)
     where
         D: DescriptorDevice<L, P, S>,
@@ -570,7 +570,7 @@ impl<P, S> DescriptorAllocator<P, S> {
 
         debug_assert!(u32::try_from(self.raw_sets_cache.len())
             .ok()
-            .map_or(false, |count| count <= bucket.total));
+            .is_some_and(|count| count <= bucket.total));
 
         bucket.free(device, self.raw_sets_cache.drain(..), pool_id);
 
@@ -585,7 +585,7 @@ impl<P, S> DescriptorAllocator<P, S> {
     /// # Safety
     ///
     /// * Same `device` instance must be passed to all method calls of
-    /// one `DescriptorAllocator` instance.
+    ///   one `DescriptorAllocator` instance.
     pub unsafe fn cleanup<L>(&mut self, device: &impl DescriptorDevice<L, P, S>) {
         for bucket in self.buckets.values_mut() {
             bucket.cleanup(device)
