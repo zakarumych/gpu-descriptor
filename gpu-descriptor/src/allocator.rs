@@ -530,20 +530,18 @@ impl<P, S> DescriptorAllocator<P, S> {
         let mut last_key = (EMPTY_COUNT, false);
         let mut last_pool_id = None;
 
+        let mut descriptor_count = 0;
+
+        // Batch freeing of adjacent descriptor sets that belong to the same bucket and pool.
         for set in sets {
+            descriptor_count += set.size.total();
+
             if last_key != (set.size, set.update_after_bind) || last_pool_id != Some(set.pool_id) {
                 if let Some(pool_id) = last_pool_id {
-                    let bucket = self
-                        .buckets
-                        .get_mut(&last_key)
-                        .expect("Set must be allocated from this allocator");
-
-                    debug_assert!(u32::try_from(self.raw_sets_cache.len())
-                        .ok()
-                        .map_or(false, |count| count <= bucket.total));
-
-                    bucket.free(device, self.raw_sets_cache.drain(..), pool_id);
+                    self.free_raw_sets_cache(device, &last_key, pool_id, descriptor_count);
+                    descriptor_count = 0;
                 }
+
                 last_key = (set.size, set.update_after_bind);
                 last_pool_id = Some(set.pool_id);
             }
@@ -551,16 +549,34 @@ impl<P, S> DescriptorAllocator<P, S> {
         }
 
         if let Some(pool_id) = last_pool_id {
-            let bucket = self
-                .buckets
-                .get_mut(&last_key)
-                .expect("Set must be allocated from this allocator");
+            self.free_raw_sets_cache(device, &last_key, pool_id, descriptor_count);
+        }
+    }
 
-            debug_assert!(u32::try_from(self.raw_sets_cache.len())
-                .ok()
-                .map_or(false, |count| count <= bucket.total));
+    /// Frees the cached descriptor sets which must be allocated from the same bucket and pool.
+    unsafe fn free_raw_sets_cache<L, D>(
+        &mut self,
+        device: &D,
+        bucket_key: &(DescriptorTotalCount, bool),
+        pool_id: u64,
+        descriptor_count: u32,
+    ) where
+        D: DescriptorDevice<L, P, S>,
+    {
+        let bucket = self
+            .buckets
+            .get_mut(bucket_key)
+            .expect("Set must be allocated from this allocator");
 
-            bucket.free(device, self.raw_sets_cache.drain(..), pool_id);
+        debug_assert!(u32::try_from(self.raw_sets_cache.len())
+            .ok()
+            .map_or(false, |count| count <= bucket.total));
+
+        bucket.free(device, self.raw_sets_cache.drain(..), pool_id);
+
+        self.total -= descriptor_count;
+        if bucket.update_after_bind {
+            self.current_update_after_bind_descriptors_in_all_pools -= descriptor_count;
         }
     }
 
