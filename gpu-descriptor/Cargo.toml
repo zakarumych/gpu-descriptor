@@ -1,6 +1,6 @@
 [package]
 name = "gpu-descriptor"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 edition = "2018"
 description = "Implementation agnostic descriptor allocator for Vulkan like APIs"
